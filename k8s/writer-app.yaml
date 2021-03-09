@@ -1,0 +1,46 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: writer-app-cluster-ip
+  labels:
+    app: writer-app
+spec:
+  selector:
+    component: writer-app
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: prom-metrics-http
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: writer-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: writer-app
+  template:
+    metadata:
+      labels:
+        component: writer-app
+    spec:
+      containers:
+        - name: writer-app
+          image: apps/writer:0.0.1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: mysql-master-cluster-ip
+            - name: DB_PORT
+              value: '3306'
+            - name: DB_USER
+              value: 'root'
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-password
+                  key: PASS

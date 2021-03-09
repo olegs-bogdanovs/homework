@@ -1,0 +1,46 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: reader-app-cluster-ip
+  labels:
+    app: reader-app
+spec:
+  selector:
+    component: reader-app
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: prom-metrics-http
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reader-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: reader-app
+  template:
+    metadata:
+      labels:
+        component: reader-app
+    spec:
+      containers:
+        - name: reader-app
+          image: apps/reader:0.0.1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: mysql-slave-cluster-ip
+            - name: DB_PORT
+              value: '3306'
+            - name: DB_USER
+              value: 'root'
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-password
+                  key: PASS
